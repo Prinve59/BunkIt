@@ -89,10 +89,6 @@ PySocks==1.7.1
 python-dateutil==2.8.2
 python-dotenv==1.0.1
 pytz==2024.1
-<<<<<<< HEAD
-pywin32==306
-=======
->>>>>>> 82feb00bcacf0267390a868acc132bef3dda0b36
 pyzmq==25.1.2
 referencing==0.35.1
 requests==2.32.3
