@@ -1,4 +1,3 @@
-pip install pickle
 pip install base64
 pip install requests
 pip install beautifulsoup4
