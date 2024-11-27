@@ -101,8 +101,12 @@ def calculate_classes_to_attend(goal_attendance, total_present, total_classes):
         if required_present <= total_present + additional_classes:
             break
         additional_classes += 1
-    
     return additional_classes
+
+def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
+    # Calculate the maximum number of classes that can be bunked
+    max_classes_to_bunk = (total_present / (goal_attendance / 100)) - total_classes
+    return max(0, round(max_classes_to_bunk))
 def home(request):
     # Initialize variables
     form = LoginForm()  # Form initialization
@@ -154,8 +158,8 @@ def home(request):
                     request.session['classes_to_attend'] = additional_classes_needed
                 elif goal_attendance < current_percentage:
                     # Calculate classes to bunk
-                    classes_to_bunk = (total_present - (goal_attendance * total_classes / 100))
-                    request.session['classes_to_bunk'] = round(classes_to_bunk)
+                    bunkable_classes = calculate_classes_to_bunk(goal_attendance, total_present, total_classes)
+                    request.session['classes_to_bunk'] = max(0, round(bunkable_classes))
 
             return redirect('home')  # Reload page to show goal calculations
 
