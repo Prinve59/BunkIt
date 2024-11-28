@@ -92,10 +92,7 @@ def logout(request):
     return redirect('home')
 
 def calculate_classes_to_attend(goal_attendance, total_present, total_classes):
-    # Initial guess for additional classes needed
     additional_classes = 0
-    
-    # Iteratively calculate additional classes required to reach the goal percentage
     while True:
         required_present = (goal_attendance * (total_classes + additional_classes)) / 100
         if required_present <= total_present + additional_classes:
@@ -104,12 +101,11 @@ def calculate_classes_to_attend(goal_attendance, total_present, total_classes):
     return additional_classes
 
 def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
-    # Calculate the maximum number of classes that can be bunked
     max_classes_to_bunk = (total_present / (goal_attendance / 100)) - total_classes
     return max(0, round(max_classes_to_bunk))
 def home(request):
     # Initialize variables
-    form = LoginForm()  # Form initialization
+    form = LoginForm()
     logged_in = request.session.get('logged_in', False)
     attendance_data = request.session.get('attendance_data', None)
     total_present = request.session.get('total_present', 0)
@@ -145,9 +141,14 @@ def home(request):
         
         # Handling goal attendance form submission
         elif 'goal_attendance' in request.POST:
-            goal_attendance = int(request.POST.get('goal_attendance'))
-            request.session['goal_attendance'] = goal_attendance
-
+            goal_attendance = request.POST.get('goal_attendance')
+            if goal_attendance=="":
+                error_message = "Pls enter Some Goal :)"
+                return render(request, 'home.html', {
+                        'error_message': error_message,
+                        'logged_in': logged_in
+                    })
+            goal_attendance=int(goal_attendance)
             if total_classes > 0:  # Ensure total_classes is greater than 0 to avoid division by zero
                 current_percentage = round((total_present / total_classes) * 100, 2)
                 if goal_attendance > current_percentage:
