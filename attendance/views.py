@@ -84,7 +84,7 @@ def login_and_fetch_attendance(username, password):
 def logout(request):
     logout_url = "https://mserp.kiet.edu/Logout.aspx"
     try:
-        session.get(logout_url)  # Call the logout endpoint
+        session.get(logout_url) 
     except requests.RequestException:
         pass
     clear_cookies()  # Clear the session and cookies
@@ -98,14 +98,16 @@ def calculate_classes_to_attend(goal_attendance, total_present, total_classes):
         if required_present <= total_present + additional_classes:
             break
         additional_classes += 1
+    
     return additional_classes
-
 def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
     max_classes_to_bunk = (total_present / (goal_attendance / 100)) - total_classes
     return max(0, round(max_classes_to_bunk))
+
+
 def home(request):
     # Initialize variables
-    form = LoginForm()
+    form = LoginForm() 
     logged_in = request.session.get('logged_in', False)
     attendance_data = request.session.get('attendance_data', None)
     total_present = request.session.get('total_present', 0)
@@ -149,6 +151,8 @@ def home(request):
                         'logged_in': logged_in
                     })
             goal_attendance=int(goal_attendance)
+            request.session['goal_attendance'] = goal_attendance
+
             if total_classes > 0:  # Ensure total_classes is greater than 0 to avoid division by zero
                 current_percentage = round((total_present / total_classes) * 100, 2)
                 if goal_attendance > current_percentage:
