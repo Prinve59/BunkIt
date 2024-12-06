@@ -146,6 +146,8 @@ def home(request):
             goal_attendance = request.POST.get('goal_attendance')
             if goal_attendance=="":
                 error_message = "Pls enter Some Goal :)"
+            elif goal_attendance=="100":
+                error_message="100% Krega attendance? Toda time khud pr bhi dede!"
                 return render(request, 'home.html', {
                         'error_message': error_message,
                         'logged_in': logged_in
