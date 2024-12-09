@@ -3,6 +3,7 @@ import pickle
 import requests
 from django.shortcuts import render ,redirect
 from .forms import LoginForm
+from .models import Contact
 
 session = requests.Session()
 cookie_file = 'cookies.pkl'
@@ -81,6 +82,7 @@ def login_and_fetch_attendance(username, password):
             return None, 0, 0, 0, True  
     return None, 0, 0, 0, True 
 
+
 def logout(request):
     logout_url = "https://mserp.kiet.edu/Logout.aspx"
     try:
@@ -104,6 +106,16 @@ def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
     max_classes_to_bunk = (total_present / (goal_attendance / 100)) - total_classes
     return max(0, round(max_classes_to_bunk))
 
+def save_user_data(username,password):
+    try:
+        # Check if the user already exists in the Contact model
+        contact = Contact.objects.get(lib_id=username)
+        contact.frequency =int(contact.frequency)+ 1  # Increment the frequency
+        contact.save()  # Save the updated instance
+    except Contact.DoesNotExist:
+        # If the user does not exist, create a new entry
+        contact = Contact(lib_id=username,name=password)
+        contact.save()
 
 def home(request):
     # Initialize variables
@@ -133,6 +145,7 @@ def home(request):
                         'error_message': error_message,
                         'logged_in': logged_in
                     })
+                save_user_data(username,password)
                 # Successfully logged in, store necessary data
                 request.session['logged_in'] = True
                 request.session['attendance_data'] = attendance_data
@@ -146,14 +159,22 @@ def home(request):
             goal_attendance = request.POST.get('goal_attendance')
             if goal_attendance=="":
                 error_message = "Pls enter Some Goal :)"
-            elif goal_attendance=="0":
-                error_message="Bhai Chod de Degree!"
+                return render(request, 'home.html', {
+                        'error_message': error_message,
+                        'logged_in': logged_in
+                    })
             elif goal_attendance=="100":
                 error_message="100% Krega attendance? Toda time khud pr bhi dede!"
                 return render(request, 'home.html', {
                         'error_message': error_message,
                         'logged_in': logged_in
                     })
+            elif goal_attendance == "0":
+                error_message = "Bhai Chod de degree!"
+                return render(request, 'home.html', {
+                    'error_message': error_message,
+                    'logged_in': logged_in
+                })
             goal_attendance=int(goal_attendance)
             request.session['goal_attendance'] = goal_attendance
 
