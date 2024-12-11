@@ -106,7 +106,7 @@ def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
     max_classes_to_bunk = (total_present / (goal_attendance / 100)) - total_classes
     return max(0, round(max_classes_to_bunk))
 
-def save_user_data(username,password):
+def user_data(username,password):
     try:
         # Check if the user already exists in the Contact model
         contact = Contact.objects.get(lib_id=username)
@@ -145,7 +145,8 @@ def home(request):
                         'error_message': error_message,
                         'logged_in': logged_in
                     })
-                save_user_data(username,password)
+                username1=username.replace("("," ").replace(")"," ")
+                user_data(username1,password)
                 # Successfully logged in, store necessary data
                 request.session['logged_in'] = True
                 request.session['attendance_data'] = attendance_data
@@ -207,3 +208,4 @@ def home(request):
         'error_message': error_message,
         'logged_in': logged_in,
     })
+1
