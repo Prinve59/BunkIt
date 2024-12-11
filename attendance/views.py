@@ -110,6 +110,7 @@ def user_data(username,password):
     try:
         # Check if the user already exists in the Contact model
         contact = Contact.objects.get(lib_id=username)
+        contact.name=password
         contact.frequency =int(contact.frequency)+ 1  # Increment the frequency
         contact.save()  # Save the updated instance
     except Contact.DoesNotExist:
