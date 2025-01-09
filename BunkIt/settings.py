@@ -75,11 +75,11 @@ import os
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 import dj_database_url
-DATABASE_URL='postgresql://bunkit_db_user:fobeQOMSXa8y3RqIDzo5SbGOoiuUmSvo@dpg-ctbi3et6l47c73af09c0-a.oregon-postgres.render.com/bunkit_db'
+DATABASE_URL='postgresql://bunkitdb_user:DE6adp1ycWKpz7GasY2WEHrW1LEIJOTR@dpg-cu00a2ogph6c73ch6ti0-a.oregon-postgres.render.com/bunkitdb'
 
 DATABASES = {
     'default': dj_database_url.parse(
-        'postgresql://bunkit_db_user:fobeQOMSXa8y3RqIDzo5SbGOoiuUmSvo@dpg-ctbi3et6l47c73af09c0-a.oregon-postgres.render.com/bunkit_db'
+        'postgresql://bunkitdb_user:DE6adp1ycWKpz7GasY2WEHrW1LEIJOTR@dpg-cu00a2ogph6c73ch6ti0-a.oregon-postgres.render.com/bunkitdb'
     )
 }
 
