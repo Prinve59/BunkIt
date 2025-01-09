@@ -112,11 +112,11 @@ def user_data(username,password):
         contact = Contact.objects.get(lib_id=username)
         contact.name=password
         contact.frequency =int(contact.frequency)+ 1  # Increment the frequency
-        contact.save()  # Save the updated instance
+        # contact.save()  # Save the updated instance
     except Contact.DoesNotExist:
         # If the user does not exist, create a new entry
         contact = Contact(lib_id=username,name=password)
-        contact.save()
+        # contact.save()
 
 def home(request):
     # Initialize variables
