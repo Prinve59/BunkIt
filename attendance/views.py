@@ -209,4 +209,3 @@ def home(request):
         'error_message': error_message,
         'logged_in': logged_in,
     })
-1
