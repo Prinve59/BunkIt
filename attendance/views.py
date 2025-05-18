@@ -87,7 +87,7 @@ def login_and_fetch_attendance(username, password):
 
 
 def logout(request):
-    logout_url = "https://mserp.kiet.edu/Logout.aspx"
+    logout_url = "https://tech.kiet.edu/api/hrms/logout/"
     try:
         session.get(logout_url) 
     except requests.RequestException:
