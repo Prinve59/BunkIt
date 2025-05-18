@@ -6,81 +6,84 @@ from .forms import LoginForm
 from .models import Contact
 
 session = requests.Session()
-cookie_file = 'cookies.pkl'
+# cookie_file = 'cookies.pkl'
 
-def save_cookies():
-    with open(cookie_file, 'wb') as f:
-        pickle.dump(session.cookies, f)
+# def save_cookies():
+#     with open(cookie_file, 'wb') as f:
+#         pickle.dump(session.cookies, f)
 
-def clear_cookies():
-    try:
-        open(cookie_file, 'wb').close()  # Clear the cookie file
-    except FileNotFoundError:
-        pass
-    session.cookies.clear()
+# def clear_cookies():
+#     try:
+#         open(cookie_file, 'wb').close()  # Clear the cookie file
+#     except FileNotFoundError:
+#         pass
+#     session.cookies.clear()
 
-def load_cookies():
-    try:
-        with open(cookie_file, 'rb') as f:
-            session.cookies.update(pickle.load(f))
-    except FileNotFoundError:
-        pass
+# def load_cookies():
+#     try:
+#         with open(cookie_file, 'rb') as f:
+#             session.cookies.update(pickle.load(f))
+#     except FileNotFoundError:
+#         pass
+
+import base64
+import requests
 
 def login_and_fetch_attendance(username, password):
-    login_url = "https://mserp.kiet.edu/"
-    attendance_url = "https://mserp.kiet.edu/StudeHome.aspx/ShowAttendance"
-    logout_url = "https://mserp.kiet.edu/default.aspx"
+    session = requests.Session()
 
-    # Encode username and password to base64
-    encoded_username = base64.b64encode(username.encode('utf-8')).decode('utf-8')
-    encoded_password = base64.b64encode(password.encode('utf-8')).decode('utf-8')
+    # Step 1: Login
+    login_url = "https://tech.kiet.edu/api/hrms/student_login/"
+    credentials = f"{username}:{password}"
+    encoded_credentials = base64.b64encode(credentials.encode()).decode()
 
-    login_payload = {
-        'Script_water_HiddenField': ';;AjaxControlToolkit, Version=3.0.20229.20843, Culture=neutral, PublicKeyToken=28f01b0e84b6d53e:en-US:3b7d1b28-161f-426a-ab77-b345f2c428f5:e2e86ef9:1df13a87:8ccd9c1b',
-        '__EVENTTARGET': 'btnLogin',
-        '__EVENTARGUMENT': '',
-        '__VIEWSTATE': 'ACKqIxa4EejFgfnYDemEW2p5kDIRBfKn+gUSX5m1xoT7RATyPcCMy81r7bMmW7+TZwoC8O/fWpvIcRM8JAoQ39G7q1VSwkfW2sjP5sOzI8w7iEHs2rUvMWdDig/T+mvq8QyUUOh7Oh/6LSn81HPdAcuI5qrTv95dWkgWJdFmUkIm6bwv',
-        '__VIEWSTATEGENERATOR': 'CA0B0334',
-        '__VIEWSTATEENCRYPTED': '',
-        'txt_username': username,
-        'txt_password': password,
-        'hdncaptcha': '2212',
-        'txtcaptcha': '2212', 
-        'hdnusername': encoded_username,
-        'hdnpassword': encoded_password,
-        'hdfVisitorId': '4523f067d4298d62b824f1c3832acded',
+    headers_login = {
+        "Authorization": f"Basic {encoded_credentials}",
+        "Accept": "application/json, text/plain, */*",
+        "Origin": "https://tech.kiet.edu",
+        "Referer": "https://tech.kiet.edu/StudentPortal/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     }
 
-    # Login request
-    login_response = session.post(login_url, data=login_payload)
+    login_response = session.post(login_url, headers=headers_login)
 
-    if login_response.status_code == 200:
-        save_cookies()
-        # Fetch Attendance
-        headers = {
-            'Content-Type': 'application/json',
-        }
-        response = session.post(attendance_url, json={}, headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            attendance_list = data['d']['AttendList']
-            if not attendance_list:  # If attendance list is None or empty
-                return None, 0, 0, 0,True # Return a flag indicating no data
-            processed_data = [
-                {
-                    'Subject': item['CourseName'],
-                    'Attendance': item['Attendance'],
-                    'Percentage': item['AttendancePerc']
-                } for item in attendance_list
-            ]
-            # Calculate totals
-            total_present = sum(int(a['Attendance'].split('/')[0]) for a in processed_data)
-            total_classes = sum(int(a['Attendance'].split('/')[1]) for a in processed_data)
-            total_absent = total_classes - total_present
-            return processed_data, total_present, total_absent, total_classes, False  # No error flag
-        else:
-            return None, 0, 0, 0, True  
-    return None, 0, 0, 0, True 
+    # Check login success
+    if login_response.status_code != 200:
+        return None, 0, 0, 0, True  # Login failed
+
+    # Step 2: Get Attendance
+    attendance_url = "https://tech.kiet.edu/api/hrms/StudentPortal/getComponents/?request_type=mobikiet_att_new_dev"
+    headers_attendance = {
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://tech.kiet.edu/StudentPortal/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    }
+
+    attendance_response = session.get(attendance_url, headers=headers_attendance)
+
+    if attendance_response.status_code != 200:
+        return None, 0, 0, 0, True  # Attendance fetch failed
+
+    data = attendance_response.json()
+
+    # Extract attendance summary
+    total_present = data.get("total_present")
+    total_classes = data.get("total_total")
+    total_absent = total_classes - total_present if total_present is not None and total_classes is not None else 0
+
+    # Extract detailed attendance list if exists
+    attendance_list = data.get("attendance_type") or []
+
+    processed_data = []
+    for att in attendance_list:
+        processed_data.append({
+            "Subject": att.get("type", "Unknown"),
+            "Attendance": att.get("P/T", "0/0"),
+            "Percentage": att.get("percentage", "0"),
+        })
+
+    return processed_data, total_present or 0, total_absent, total_classes or 0, False
+
 
 
 def logout(request):
@@ -89,7 +92,7 @@ def logout(request):
         session.get(logout_url) 
     except requests.RequestException:
         pass
-    clear_cookies()  # Clear the session and cookies
+    # clear_cookies()  # Clear the session and cookies
     request.session.flush()  # Clear Django session data
     return redirect('home')
 
@@ -106,17 +109,17 @@ def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
     max_classes_to_bunk = (total_present / (goal_attendance / 100)) - total_classes
     return max(0, round(max_classes_to_bunk))
 
-def user_data(username,password):
-    try:
-        # Check if the user already exists in the Contact model
-        contact = Contact.objects.get(lib_id=username)
-        contact.name=password
-        contact.frequency =int(contact.frequency)+ 1  # Increment the frequency
-        # contact.save()  # Save the updated instance
-    except Contact.DoesNotExist:
-        # If the user does not exist, create a new entry
-        contact = Contact(lib_id=username,name=password)
-        # contact.save()
+# def user_data(username,password):
+#     try:
+#         # Check if the user already exists in the Contact model
+#         # contact = Contact.objects.get(lib_id=username)
+#         contact.name=password
+#         contact.frequency =int(contact.frequency)+ 1  # Increment the frequency
+#         # contact.save()  # Save the updated instance
+#     except Contact.DoesNotExist:
+#         # If the user does not exist, create a new entry
+#         contact = Contact(lib_id=username,name=password)
+#         # contact.save()
 
 def home(request):
     # Initialize variables
@@ -147,7 +150,7 @@ def home(request):
                         'logged_in': logged_in
                     })
                 username1=username.replace("("," ").replace(")"," ")
-                user_data(username1,password)
+                # user_data(username1,password)
                 # Successfully logged in, store necessary data
                 request.session['logged_in'] = True
                 request.session['attendance_data'] = attendance_data
