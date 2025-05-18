@@ -78,9 +78,16 @@ import dj_database_url
 DATABASE_URL='postgresql://bunkitdb_user:DE6adp1ycWKpz7GasY2WEHrW1LEIJOTR@dpg-cu00a2ogph6c73ch6ti0-a.oregon-postgres.render.com/bunkitdb'
 
 DATABASES = {
-    'default': dj_database_url.parse(
-        'postgresql://bunkitdb_user:DE6adp1ycWKpz7GasY2WEHrW1LEIJOTR@dpg-cu00a2ogph6c73ch6ti0-a.oregon-postgres.render.com/bunkitdb'
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+    # 'default': dj_database_url.parse(
+    #     'postgresql://bunkitdb_user:DE6adp1ycWKpz7GasY2WEHrW1LEIJOTR@dpg-cu00a2ogph6c73ch6ti0-a.oregon-postgres.render.com/bunkitdb'
+    # ),
+    'OPTIONS': {
+            'sslmode': 'require',  # Make sure this is set
+        },
 }
 
 
