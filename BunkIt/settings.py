@@ -27,6 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 7  # 1 week
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # Application definition
 
