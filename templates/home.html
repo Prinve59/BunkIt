@@ -67,11 +67,25 @@
         {% csrf_token %}
         <div class="form-group pb-2">
             <label for="goal_attendance">Goal Attendance Percentage</label>
-            <input type="number" id="goal_attendance" name="goal_attendance" class="form-control" min="0" max="100">
+            <input type="number" id="goal_attendance" name="goal_attendance" class="form-control" min="0" max="100" placeholder="Goal Percentage" >
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Goal</button>
+
+    </form>
+
+
+
+    <form method="POST" class="mb-4">
+        
+        {% csrf_token %}
+        <div class="form-group pb-2">
+            <label for="classes">Classes to leave</label>
+                <input type="number" placeholder="Classes" class="form-control" min="0" max="100" name="class_to_leave" >
         </div>
         <button type="submit" class="btn btn-primary">Submit Goal</button>
         <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
     </form>
+
 
     <!-- Display Attendance Data -->
     <h2 class="text-center mb-3">Attendance Data</h2>
@@ -83,15 +97,20 @@
     </div>
     {% if goal_attendance %}
     <h2 class="text-center mb-3 text-2xl">Goal: {{ goal_attendance }}%</h2>
-    {% if goal_attendance > attendance_per %}
-        <p class="text-warning text-center">You need to attend <strong>{{ classes_to_attend }} more classes</strong> to reach your goal.</p>
-    {% elif goal_attendance < attendance_per %}
-        <p class="text-success text-center">You can bunk <strong>{{ classes_to_bunk }} more classes</strong> to stay above your goal.</p>
-    {% else %}
-        <p class="text-info text-center">You are already at your goal attendance percentage!</p>
+        {% if goal_attendance > attendance_per %}
+            <p class="text-warning text-center">You need to attend <strong>{{ classes_to_attend }} more classes</strong> to reach your goal.</p>
+        {% elif goal_attendance < attendance_per %}
+            <p class="text-success text-center">You can bunk <strong>{{ classes_to_bunk }} more classes</strong> to stay above your goal.</p>
+        {% else %}
+            <p class="text-info text-center">You are already at your goal attendance percentage!</p>
+        {% endif %}
     {% endif %}
-    {% endif %}
+    {% if extra_class %}
 
+            <p class="text-warning text-center">You will have <strong>{{ attendance_drop }}% </strong> after skipping {{extra_class}} classes.</p>
+            <p class="text-success text-center">You will have <strong>{{ attendance_boost }}%</strong> after attending {{extra_class}} classes.</p>
+
+    {% endif %}
     <table class="table table-bordered mt-4">
         <thead class="table-dark">
             <tr>
