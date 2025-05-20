@@ -197,7 +197,16 @@ def home(request):
                     request.session['classes_to_bunk'] = max(0, round(bunkable_classes))
 
             return redirect('home')  # Reload page to show goal calculations
-
+        elif "class_to_leave" in request.POST:
+            extra_class=request.POST.get("class_to_leave")
+            if extra_class:
+                extra_class = int(extra_class)
+                request.session['extra_class'] = extra_class
+                attendance_drop=total_present / (total_classes + extra_class)*100
+                attendance_boost=(total_present + extra_class) / (total_classes + extra_class)*100
+                request.session['attendance_drop'] = attendance_drop
+                request.session['attendance_boost'] = attendance_boost
+            return redirect('home')
     # Render the page (after login or goal update)
     return render(request, 'home.html', {
         'form': form,
@@ -211,4 +220,7 @@ def home(request):
         'classes_to_bunk': classes_to_bunk,
         'error_message': error_message,
         'logged_in': logged_in,
+         'attendance_drop': request.session.get('attendance_drop'),  # Use .get()
+    'attendance_boost': request.session.get('attendance_boost'),
+        'extra_class': request.session.get('extra_class'),
     })
