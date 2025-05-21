@@ -29,7 +29,7 @@ session = requests.Session()
 import base64
 import requests
 
-def login_and_fetch_attendance(username, password):
+def login_and_fetch_attendance(username, password,without_event):
     session = requests.Session()
 
     # Step 1: Login
@@ -65,9 +65,23 @@ def login_and_fetch_attendance(username, password):
         return None, 0, 0, 0, True  # Attendance fetch failed
 
     data = attendance_response.json()
-
+    if without_event:
     # Extract attendance summary
-    total_present = data.get("total_present")
+        type=data.get("attendance_type")
+        event = 0
+        medical = 0
+        for item in type:
+            if item.get("type") == "EVENTS":
+                pt_value = item.get("P/T")
+                event = pt_value.split('/')[0] if pt_value else "0"
+            if item.get("type") == "MEDICAL":
+                pt_value = item.get("P/T")
+                medical = pt_value.split('/')[0] if pt_value else "0"
+            present=int(event)+int(medical)
+        total_present=int(data.get("total_present"))-present
+    else :
+        total_present = data.get("total_present")
+
     total_classes = data.get("total_total")
     total_absent = total_classes - total_present if total_present is not None and total_classes is not None else 0
 
@@ -141,7 +155,8 @@ def home(request):
             if form.is_valid():
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
-                attendance_data, total_present, total_absent, total_classes, no_data = login_and_fetch_attendance(username, password)
+                without_event=form.cleaned_data['without_event']
+                attendance_data, total_present, total_absent, total_classes, no_data = login_and_fetch_attendance(username, password ,without_event)
                 if no_data:
                     error_message = "Invaild Credentials"
                     return render(request, 'home.html', {
