@@ -143,7 +143,6 @@ def home(request):
     total_present = request.session.get('total_present', 0)
     total_absent = request.session.get('total_absent', 0)
     total_classes = request.session.get('total_classes', 0)
-    goal_attendance = request.session.get('goal_attendance', None)
     classes_to_attend = request.session.get('classes_to_attend', None)
     classes_to_bunk = request.session.get('classes_to_bunk', None)
     error_message = None
@@ -175,7 +174,53 @@ def home(request):
                 return redirect('home')  # Reload page to show updated data
         
         # Handling goal attendance form submission
-        elif 'goal_attendance' in request.POST:
+        elif request.POST.get('goal_attendance', '').strip() != '' and  request.POST.get('class_to_leave', '').strip() != '' :
+            goal_attendance = request.POST.get('goal_attendance')
+            extra_class=request.POST.get("class_to_leave")
+            extra_class = int(extra_class)
+            if goal_attendance=="":
+                error_message = "Pls enter Some Goal :)"
+                return render(request, 'home.html', {
+                        'error_message': error_message,
+                        'logged_in': logged_in
+                    })
+            elif goal_attendance=="100":
+                error_message="100% Krega attendance? Toda time khud pr bhi dede!"
+                return render(request, 'home.html', {
+                        'error_message': error_message,
+                        'logged_in': logged_in
+                    })
+            elif goal_attendance == "0":
+                error_message = "Bhai Chod de degree!"
+                return render(request, 'home.html', {
+                    'error_message': error_message,
+                    'logged_in': logged_in
+                })
+            goal_attendance=int(goal_attendance)
+            request.session['goal_attendance'] = goal_attendance
+            total_present=total_present+extra_class
+            total_classes=total_classes+extra_class
+            if total_classes > 0:  # Ensure total_classes is greater than 0 to avoid division by zero
+                current_percentage = round((total_present / total_classes) * 100, 2)
+                if goal_attendance > current_percentage:
+
+                    additional_classes_needed = calculate_classes_to_attend(goal_attendance, total_present,total_classes)
+
+
+                    request.session['classes_to_attend'] = additional_classes_needed
+                elif goal_attendance < current_percentage:
+                    # Calculate classes to bunk
+                    bunkable_classes = calculate_classes_to_bunk(goal_attendance, total_present, total_classes)
+                    request.session['classes_to_bunk'] = max(0, round(bunkable_classes))
+
+            if extra_class:
+                request.session['extra_class'] = extra_class
+                attendance_drop=total_present / (total_classes + extra_class)*100
+                attendance_boost=(total_present + extra_class) / (total_classes + extra_class)*100
+                request.session['attendance_drop'] = attendance_drop
+                request.session['attendance_boost'] = attendance_boost
+            return redirect('home')
+        elif request.POST.get('goal_attendance', '').strip() != '':
             goal_attendance = request.POST.get('goal_attendance')
             if goal_attendance=="":
                 error_message = "Pls enter Some Goal :)"
@@ -212,7 +257,7 @@ def home(request):
                     request.session['classes_to_bunk'] = max(0, round(bunkable_classes))
 
             return redirect('home')  # Reload page to show goal calculations
-        elif "class_to_leave" in request.POST:
+        elif request.POST.get('class_to_leave', '').strip() != '':
             extra_class=request.POST.get("class_to_leave")
             if extra_class:
                 extra_class = int(extra_class)
@@ -230,12 +275,12 @@ def home(request):
         'total_absent': total_absent,
         'total_classes': total_classes,
         'attendance_per': round((total_present / total_classes) * 100, 2) if total_classes > 0 else 0,
-        'goal_attendance': goal_attendance,
+        'goal_attendance': request.session.get('goal_attendance'),
         'classes_to_attend': classes_to_attend,
         'classes_to_bunk': classes_to_bunk,
         'error_message': error_message,
         'logged_in': logged_in,
-         'attendance_drop': request.session.get('attendance_drop'),  # Use .get()
-    'attendance_boost': request.session.get('attendance_boost'),
+        'attendance_drop': request.session.get('attendance_drop'),  # Use .get()
+        'attendance_boost': request.session.get('attendance_boost'),
         'extra_class': request.session.get('extra_class'),
     })
