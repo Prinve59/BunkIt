@@ -69,17 +69,10 @@
             <label for="goal_attendance">Goal Attendance Percentage</label>
             <input type="number" id="goal_attendance" name="goal_attendance" class="form-control" min="0" max="100" placeholder="Goal Percentage" >
         </div>
-        <button type="submit" class="btn btn-primary">Submit Goal</button>
+        <!-- <button type="submit" class="btn btn-primary">Submit Goal</button> -->
 
-    </form>
-
-
-
-    <form method="POST" class="mb-4">
-        
-        {% csrf_token %}
         <div class="form-group pb-2">
-            <label for="classes">Classes to leave</label>
+            <label for="classes">More Classes to attend</label>
                 <input type="number" placeholder="Classes" class="form-control" min="0" max="100" name="class_to_leave" >
         </div>
         <button type="submit" class="btn btn-primary">Submit Goal</button>
