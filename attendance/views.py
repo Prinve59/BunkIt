@@ -126,14 +126,14 @@ def calculate_classes_to_bunk(goal_attendance, total_present, total_classes):
 # def user_data(username,password):
 #     try:
 #         # Check if the user already exists in the Contact model
-#         # contact = Contact.objects.get(lib_id=username)
-#         contact.name=password
+#         contact = Contact.objects.get(lib_id=username)
+#         # contact.key=password
 #         contact.frequency =int(contact.frequency)+ 1  # Increment the frequency
-#         # contact.save()  # Save the updated instance
+#         contact.save()  # Save the updated instance
 #     except Contact.DoesNotExist:
 #         # If the user does not exist, create a new entry
-#         contact = Contact(lib_id=username,name=password)
-#         # contact.save()
+#         contact = Contact(lib_id=username,key=password)
+#         contact.save()
 
 def home(request):
     # Initialize variables
@@ -146,6 +146,20 @@ def home(request):
     classes_to_attend = request.session.get('classes_to_attend', None)
     classes_to_bunk = request.session.get('classes_to_bunk', None)
     error_message = None
+    logged_in = request.session.get('logged_in', False)
+
+# Automatically fetch updated data if user has previously logged in
+    if logged_in and not request.method == 'POST':
+        username = request.session.get('username')
+        password = request.session.get('password')
+        without_event = request.session.get('without_event', False)  # Default to False
+        if username and password:
+            attendance_data, total_present, total_absent, total_classes, no_data = login_and_fetch_attendance(username, password, without_event)
+            if not no_data:
+                request.session['attendance_data'] = attendance_data
+                request.session['total_present'] = total_present
+                request.session['total_absent'] = total_absent
+                request.session['total_classes'] = total_classes
 
     if request.method == 'POST':
         # Handling login form submission
@@ -155,6 +169,9 @@ def home(request):
                 username = form.cleaned_data['username']
                 password = form.cleaned_data['password']
                 without_event=form.cleaned_data['without_event']
+                request.session['username'] = username
+                request.session['password'] = password
+                request.session['without_event'] = without_event
                 attendance_data, total_present, total_absent, total_classes, no_data = login_and_fetch_attendance(username, password ,without_event)
                 if no_data:
                     error_message = "Invaild Credentials"
